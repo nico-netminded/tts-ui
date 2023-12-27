@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS TTS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            font-family: Manrope;
+        }
+        svg#L4{
+            width: 100px;
+            height: 30px;
+            margin: 0;
+            display:inline-block;
+        }
+	.topnav {
+            height: 40px;
+            background-color: #333;
+	    color: white;
+            overflow: hidden;
+	    font-size: 17px;
+	    padding: 20px;
+        }
+    </style>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
+</head>
+<body>
+    <div class="topnav">
+	    CS TTS
+    </div>
+    <section class="py-10 bg-gray-50 sm:py-16 lg:py-16">
+        <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <div class="max-w-xl mx-auto text-center">
+                <h2 class="mt-10 text-3xl font-bold leading-tight text-black sm:text-3xl lg:text-4xl">CS Text To Speech</h2>
+                <p class="mt-8 text-base leading-relaxed text-gray-600">Write your text below and click on get audio from text. Generate text for an infinite amount of text with no limit</p>
+            </div>
+
+            <form action="#" class="max-w-xl mx-auto mt-10" method="javascript:do_tts()">
+                <div>
+                    <label class="sr-only"> Search </label>
+                    <div class="relative border-1">
+                        
+                        <textarea type="text" id="text" name="text" maxlength="400" placeholder="Enter your text here..." class="block w-full py-3 pl-4 pr-4 text-base font-normal leading-7 text-gray-900 placeholder-gray-500 bg-white border border-gray-500 rounded-md focus:ring-white focus:border-white focus:ring-offset-2" rows="5"></textarea>
+                    </div>
+                    <div id="html_element" class="mt-5"></div>
+                    <br>
+                </div>
+                <div class="mt-5">
+                  
+                    <button 
+                    type="submit" id="speak-button" class="rounded-lg inline-flex items-center justify-center w-full px-4 py-4 text-sm font-bold tracking-widest text-white uppercase transition-all duration-200 bg-gray-900 border border-transparent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-white hover:bg-gray-700">
+                        <span>Get audio from text</span>
+                        <div class="hidden" id="svg_container">
+                            <svg version="1.1" id="L4"  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                            viewBox="0 0 100 100" enable-background="new 0 0 0 0" xml:space="preserve">
+                            <span>Get audio from text</span>
+			    </svg> 
+			</div>
+                    </button>
+                        <audio class="w-full mt-8" id="audio" controls autoplay hidden></audio>
+                        <p id="message"></p>
+                    <div class="mt-8 border-t" id="result">
+                    </div>
+                </div>
+            </form>
+
+
+        </div>
+    </section>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      let apiError = false
+      let audioFile;
+      function getTextValue(textId) {
+          const container = q(textId)
+          if (container) {
+              return container.value
+          }
+          return ""
+      }
+      function q(selector) { return document.querySelector(selector) }
+
+      function toggleLoader () {
+        document.querySelector("#svg_container").classList.toggle("hidden")
+        document.querySelector("button span").classList.toggle("hidden")
+      }
+      function do_tts(e) {
+          const text = q('#text').value
+          const speaker_id = getTextValue('#speaker_id')
+          const style_wav = getTextValue('#style_wav')
+          const language_id = getTextValue('#language_id')
+          if (text) {
+              q('#message').textContent = 'Synthesizing...'
+              q('#speak-button').disabled = true
+              q('#audio').hidden = true
+              synthesize(text, speaker_id, style_wav, language_id)
+          }
+      }
+
+      function synthesize(text, speaker_id = "", style_wav = "", language_id = "") {
+	  console.log(text); 
+          fetch(`/api/tts?text=${encodeURIComponent(text)}&speaker_id=${encodeURIComponent(speaker_id)}&style_wav=${encodeURIComponent(style_wav)}&language_id=${encodeURIComponent(language_id)}`, { cache: 'no-cache' })
+              .then(function (res) {
+                  if (!res.ok) throw Error(res.statusText)
+                  return res.blob()
+              }).then(function (blob) {
+                  q('#message').textContent = ''
+                  q('#speak-button').disabled = false
+                  q('#audio').src = URL.createObjectURL(blob)
+                  q('#audio').hidden = false
+              }).catch(function (err) {
+                  q('#message').textContent = 'Error: ' + err.message
+                  q('#speak-button').disabled = false
+              })
+      }
+      submit = async (e) =>{
+        document.querySelector("#result").classList.add("hidden")
+        let data = new FormData(e.target)
+            e.preventDefault()
+	    do_tts(e);
+        }
+
+        window.onload = function(){
+            document.querySelector("form").addEventListener("submit",  submit)
+            document.querySelector("#download").addEventListener("click",  download)
+
+        }
+    
+      </script>
+
+</body>
+</html>
